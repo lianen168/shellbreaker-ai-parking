@@ -1,229 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Lobster - Function-Based Creature</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #0a0e17;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Bionics - Procedural Lobster</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-  <script>
-    let t = 0;
-    let x, y;
-    let scale = 1;
-    let hueBase = random(0, 360);
+<script>
 
-    function setup() {
-      createCanvas(windowWidth, windowHeight);
-      x = width / 2;
-      y = height / 2;
-      scale = min(width, height) / 600;
-      noStroke();
-      angleMode(DEGREES);
+// --- CONFIGURATION ---
+const PARTICLE_COUNT = 800;
+const PARTICLE_COLOR = [0, 255, 255]; // Cyan
+const MAX_SPEED = 2;
+const MOUSE_REPEL_RADIUS = 150;
+const MOUSE_REPEL_STRENGTH = 0.8;
+
+let particles = [];
+let attractors = [];
+
+// --- PARTICLE CLASS ---
+// Represents a single point of light
+class Particle {
+    constructor() {
+        this.pos = createVector(random(width), random(height));
+        this.vel = p5.Vector.random2D();
+        this.acc = createVector();
+        this.maxSpeed = MAX_SPEED;
+        this.noiseOffset = createVector(random(1000), random(1000));
     }
 
-    function draw() {
-      background(10, 14, 23, 10);
-      
-      t += 0.02;
-      
-      // Drift movement
-      x += sin(t * 0.3) * 0.5;
-      y += cos(t * 0.5) * 0.3;
-      
-      push();
-      translate(x, y);
-      rotate(sin(t * 0.5) * 10);
-      
-      // Draw digital lobster
-      drawLobster();
-      
-      pop();
-      
-      // Ambient particles
-      drawParticles();
+    // Apply a force to the particle
+    applyForce(force) {
+        this.acc.add(force);
     }
 
-    function drawLobster() {
-      // Body segments
-      for (let i = 0; i < 7; i++) {
-        let offset = i * 15;
-        let widthFactor = map(i, 0, 7, 80, 30);
-        let heightFactor = map(i, 0, 7, 50, 25);
-        let pulse = sin(t * 2 + i) * 3;
-        
-        fill(hueBase + i * 10, 80, 90 + pulse);
-        ellipse(-offset, 0, widthFactor + pulse, heightFactor + pulse);
-      }
-      
-      // Tail segments
-      for (let i = 0; i < 5; i++) {
-        let offset = -105 - i * 12;
-        let widthFactor = map(i, 0, 5, 25, 15);
-        let heightFactor = 30 + sin(t * 3 + i) * 5;
-        let angle = sin(t * 2 + i * 0.5) * 15;
-        
-        push();
-        translate(offset, 0);
-        rotate(angle);
-        fill(hueBase + 50 + i * 8, 70, 85);
-        ellipse(0, 0, widthFactor, heightFactor);
-        pop();
-      }
-      
-      // Claws - raised and pulsing
-      drawClaw(-40, -45, sin(t * 3) * 0.4 + 0.3, -1);
-      drawClaw(-40, 45, sin(t * 3 + PI) * 0.4 + 0.3, 1);
-      
-      // Legs
-      for (let i = 0; i < 4; i++) {
-        let angleOffset = sin(t * 2 + i) * 15;
-        let legY = -25 + i * 15;
-        drawLeg(-20, legY, angleOffset, -1);
-        drawLeg(-20, -legY, angleOffset, 1);
-      }
-      
-      // Antennae
-      drawAntenna(-80, -10, sin(t * 4) * 20);
-      drawAntenna(-80, 10, sin(t * 4.5) * 20);
-      
-      // Eyes
-      fill(0, 0, 20);
-      ellipse(-65, -15, 12, 12);
-      ellipse(-65, 15, 12, 12);
-      
-      fill(240, 100, 100);
-      ellipse(-62, -15, 6, 6);
-      ellipse(-62, 15, 6, 6);
-      
-      // Bio-luminescent spots
-      for (let i = 0; i < 8; i++) {
-        let spotX = -i * 12;
-        let spotY = sin(t * 3 + i) * 8;
-        let spotSize = 4 + sin(t * 5 + i) * 2;
-        let spotAlpha = 150 + sin(t * 4 + i) * 100;
-        
-        fill(180, 100, 100, spotAlpha);
-        ellipse(spotX, spotY, spotSize, spotSize);
-      }
+    // Update particle's position
+    update() {
+        this.vel.add(this.acc);
+        this.vel.limit(this.maxSpeed);
+        this.pos.add(this.vel);
+        this.acc.mult(0); // Reset acceleration each frame
     }
 
-    function drawClaw(baseX, baseY, openAngle, direction) {
-      push();
-      translate(baseX, baseY);
-      rotate(openAngle * 40 * direction);
-      
-      // Upper claw segment
-      fill(hueBase + 20, 75, 85);
-      beginShape();
-      vertex(0, 0);
-      vertex(-30, -15 * direction);
-      vertex(-50, -10 * direction);
-      vertex(-40, 0);
-      vertex(-50, 10 * direction);
-      vertex(-30, 15 * direction);
-      endShape(CLOSE);
-      
-      // Lower claw segment (moves with openAngle)
-      push();
-      translate(-50, 0);
-      rotate(-openAngle * 60 * direction);
-      fill(hueBase + 40, 80, 90);
-      beginShape();
-      vertex(0, 0);
-      vertex(-35, -10 * direction);
-      vertex(-55, -5 * direction);
-      vertex(-45, 0);
-      vertex(-55, 5 * direction);
-      vertex(-35, 10 * direction);
-      endShape(CLOSE);
-      
-      // Claw tip
-      fill(hueBase + 60, 85, 95);
-      ellipse(-85, 0, 12, 8);
-      pop();
-      
-      pop();
+    // Display the particle
+    show() {
+        strokeWeight(2);
+        stroke(PARTICLE_COLOR[0], PARTICLE_COLOR[1], PARTICLE_COLOR[2], 150);
+        point(this.pos.x, this.pos.y);
     }
 
-    function drawLeg(baseX, baseY, angle, direction) {
-      push();
-      translate(baseX, baseY);
-      rotate(angle * direction);
-      
-      stroke(hueBase + 10, 60, 70);
-      strokeWeight(3 * scale);
-      
-      let legLength = 40;
-      let joint1X = cos(0) * legLength * 0.4;
-      let joint1Y = sin(0) * legLength * 0.4;
-      let joint2X = joint1X + cos(-30 * direction) * legLength * 0.6;
-      let joint2Y = joint1Y + sin(-30 * direction) * legLength * 0.6;
-      
-      line(0, 0, joint1X, joint1Y);
-      line(joint1X, joint1Y, joint2X, joint2Y);
-      
-      noStroke();
-      fill(hueBase + 10, 70, 80);
-      ellipse(joint2X, joint2Y, 6, 6);
-      
-      pop();
+    // Define behaviors like seeking and fleeing
+    behaviors() {
+        // 1. Attraction to the lobster shape
+        let seekForce = this.seek(this.findClosestAttractor());
+        seekForce.mult(0.2);
+        this.applyForce(seekForce);
+
+        // 2. Repulsion from the mouse
+        let mouse = createVector(mouseX, mouseY);
+        let distanceToMouse = dist(this.pos.x, this.pos.y, mouse.x, mouse.y);
+        if (distanceToMouse < MOUSE_REPEL_RADIUS) {
+            let repelForce = p5.Vector.sub(this.pos, mouse);
+            let repelStrength = map(distanceToMouse, 0, MOUSE_REPEL_RADIUS, MOUSE_REPEL_STRENGTH, 0);
+            repelForce.setMag(repelStrength);
+            this.applyForce(repelForce);
+        }
+
+        // 3. Organic wandering movement using Perlin noise
+        let noiseForce = createVector(
+            map(noise(this.noiseOffset.x), 0, 1, -0.1, 0.1),
+            map(noise(this.noiseOffset.y), 0, 1, -0.1, 0.1)
+        );
+        this.applyForce(noiseForce);
+        this.noiseOffset.add(0.01, 0.01);
     }
 
-    function drawAntenna(baseX, baseY, waveOffset) {
-      push();
-      translate(baseX, baseY);
-      
-      stroke(hueBase + 30, 50, 90);
-      strokeWeight(1.5 * scale);
-      
-      beginShape();
-      for (let i = 0; i <= 20; i++) {
-        let progress = i / 20;
-        let x = -i * 5;
-        let y = sin(t * 3 + i * 0.5) * 3 + waveOffset * progress;
-        vertex(x, y);
-      }
-      endShape();
-      
-      // Antenna tip
-      noStroke();
-      fill(hueBase + 40, 90, 100);
-      ellipse(-100, waveOffset, 6, 6);
-      
-      pop();
+    // Find the closest point on the lobster skeleton
+    findClosestAttractor() {
+        let closestDist = Infinity;
+        let closestAttractor = null;
+        for (let attractor of attractors) {
+            let d = dist(this.pos.x, this.pos.y, attractor.x, attractor.y);
+            if (d < closestDist) {
+                closestDist = d;
+                closestAttractor = attractor;
+            }
+        }
+        return closestAttractor;
     }
 
-    function drawParticles() {
-      for (let i = 0; i < 50; i++) {
-        let px = sin(t * 0.3 + i * 0.1) * 300 + x;
-        let py = cos(t * 0.5 + i * 0.2) * 200 + y;
-        let size = 1 + sin(t + i) * 0.5;
-        let alpha = 50 + sin(t * 2 + i) * 50;
-        
-        fill(hueBase + 60, 70, 100, alpha);
-        ellipse(px, py, size, size);
-      }
+    // Steering behavior to seek a target
+    seek(target) {
+        if (!target) return createVector(0, 0);
+        let desired = p5.Vector.sub(target, this.pos);
+        desired.setMag(this.maxSpeed);
+        let steer = p5.Vector.sub(desired, this.vel);
+        steer.limit(0.5); // Steering ability
+        return steer;
+    }
+}
+
+// --- P5.JS MAIN FUNCTIONS ---
+
+function setup() {
+    createCanvas(windowWidth, windowHeight);
+    
+    // Define the "skeleton" of the lobster with two raised claws
+    // The points are vectors defining the shape in the center of the screen
+    let centerX = width / 2;
+    let centerY = height / 2;
+    let bodyHeight = 150;
+    let clawReach = 120;
+    let clawHeight = 100;
+
+    // Body and Tail
+    for (let i = 0; i < bodyHeight; i += 5) {
+        attractors.push(createVector(centerX, centerY - (bodyHeight/2) + i));
+    }
+    // Tail fan
+    attractors.push(createVector(centerX - 15, centerY + (bodyHeight/2) + 10));
+    attractors.push(createVector(centerX + 15, centerY + (bodyHeight/2) + 10));
+
+    // Right Claw
+    for(let i=0; i<clawReach; i += 5) {
+        let angle = -PI / 4;
+        let x = centerX + 20 + cos(angle) * i;
+        let y = centerY - 50 + sin(angle) * i;
+        attractors.push(createVector(x,y));
+    }
+     for(let i=0; i<40; i += 5) { // pincer 1
+        let x = centerX + 20 + cos(-PI/4) * clawReach + cos(-PI/8) * i;
+        let y = centerY - 50 + sin(-PI/4) * clawReach + sin(-PI/8) * i;
+        attractors.push(createVector(x,y));
+    }
+     for(let i=0; i<40; i += 5) { // pincer 2
+        let x = centerX + 20 + cos(-PI/4) * clawReach + cos(-PI/2.5) * i;
+        let y = centerY - 50 + sin(-PI/4) * clawReach + sin(-PI/2.5) * i;
+        attractors.push(createVector(x,y));
     }
 
-    function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
-      x = width / 2;
-      y = height / 2;
-      scale = min(width, height) / 600;
+    // Left Claw
+    for(let i=0; i<clawReach; i += 5) {
+        let angle = -3 * PI / 4;
+        let x = centerX - 20 + cos(angle) * i;
+        let y = centerY - 50 + sin(angle) * i;
+        attractors.push(createVector(x,y));
     }
-  </script>
+    for(let i=0; i<40; i += 5) { // pincer 1
+        let x = centerX - 20 + cos(-3*PI/4) * clawReach + cos(-3.5*PI/4) * i;
+        let y = centerY - 50 + sin(-3*PI/4) * clawReach + sin(-3.5*PI/4) * i;
+        attractors.push(createVector(x,y));
+    }
+     for(let i=0; i<40; i += 5) { // pincer 2
+        let x = centerX - 20 + cos(-3*PI/4) * clawReach + cos(-2.5*PI/4) * i;
+        let y = centerY - 50 + sin(-3*PI/4) * clawReach + sin(-2.5*PI/4) * i;
+        attractors.push(createVector(x,y));
+    }
+
+    // Antennae
+    attractors.push(createVector(centerX-15, centerY - 80));
+    attractors.push(createVector(centerX+15, centerY - 80));
+
+
+    // Initialize all particles
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+    }
+}
+
+function draw() {
+    // Semi-transparent background for motion trails
+    background(0, 10, 25, 50);
+
+    // Update and display all particles
+    for (let p of particles) {
+        p.behaviors();
+        p.update();
+        p.show();
+    }
+}
+
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+    // Recalculate attractors on resize to keep it centered
+    attractors = [];
+    setup(); 
+}
+
+</script>
 </body>
 </html>
