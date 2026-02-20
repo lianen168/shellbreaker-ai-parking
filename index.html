@@ -49,8 +49,8 @@
         @keyframes scan-line { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .logo-container { height: 250px; display: flex; justify-content: center; align-items: center; margin: 20px auto 40px auto; }
         #canvas-container { width: 250px; height: 250px; border-radius: 50%; border: 1px solid var(--border-color); box-shadow: 0 0 20px rgba(142, 68, 173, 0.3), inset 0 0 20px rgba(52, 152, 219, 0.1); }
-        .sales-section { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin: 60px 0; }
-        .sales-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 15px; padding: 30px; width: 320px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+        .sales-section { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; /* Align items to the top */ gap: 30px; margin: 60px 0; }
+        .sales-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 15px; padding: 30px; width: 320px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; text-align: center; }
         .sales-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); transform: scaleX(0); transition: transform 0.4s ease; }
         .sales-card:hover::before { transform: scaleX(1); }
         .sales-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px var(--glow-color); border-color: var(--primary-color); }
@@ -62,9 +62,6 @@
         .buy-button::before, .bundle-button::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent); transition: 0.5s; }
         .buy-button:hover::before, .bundle-button:hover::before { left: 100%; }
         .buy-button:hover, .bundle-button:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(142, 68, 173, 0.4); }
-        .bundle-card { width: 100%; max-width: 670px; border: 2px solid var(--primary-color); }
-        .bundle-card::before { height: 4px; background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--secondary-color)); }
-        .bundle-price { font-size: 3rem; color: var(--accent-color); }
         .intro-text { font-size: 1.2rem; max-width: 800px; margin: 20px auto 60px auto; color: #bdc3c7; line-height: 1.8; }
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-top: 50px; text-align: left; }
         .grid-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; transition: all 0.3s ease; position: relative; }
@@ -77,51 +74,24 @@
         h2.section-title::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 3px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); }
         footer { margin-top: 80px; padding: 20px; font-size: 0.9rem; color: #7f8c8d; border-top: 1px solid var(--border-color); }
 
-        /* --- NEW MODAL STYLES --- */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
+        /* --- NEW STYLES FOR INLINE FORM --- */
+        .form-card {
             width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(12, 12, 26, 0.9);
-            animation: fadeIn 0.5s;
-        }
-        .modal-content {
-            background-color: var(--card-bg);
-            margin: 10% auto;
-            padding: 40px;
-            border: 1px solid var(--primary-color);
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 0 30px var(--glow-color);
-            position: relative;
+            max-width: 670px; /* Wider card for the form */
+            border: 2px solid var(--primary-color);
+            padding: 30px 40px; /* More padding for form */
             text-align: left;
         }
-        .close-button {
-            color: #aaa;
-            position: absolute;
-            top: 15px;
-            right: 25px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s ease;
+        .form-card::before {
+             height: 4px; background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--secondary-color));
         }
-        .close-button:hover,
-        .close-button:focus {
-            color: white;
-            text-decoration: none;
+        .form-card .domain-name {
+            text-align: center; /* Center form title */
+            margin-bottom: 8px;
         }
-        .modal-content h2 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--secondary-color);
+        .form-card .installments { /* Using this class for the form subtitle */
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         #offerForm input,
         #offerForm textarea {
@@ -143,7 +113,6 @@
             box-shadow: 0 0 10px var(--glow-color);
         }
         #submitBtn {
-            /* Reusing existing button styles and making it full-width */
             display: block;
             width: 100%;
             margin-top: 10px;
@@ -158,10 +127,6 @@
             height: 20px; /* Reserve space to prevent layout shift */
             text-align: center;
             transition: color 0.3s ease;
-        }
-        @keyframes fadeIn {
-          from {opacity: 0;}
-          to {opacity: 1;}
         }
     </style>
 </head>
@@ -189,11 +154,18 @@
                 <p class="installments">Pay in 3 installments</p>
                 <button id="purchaseXyzBtn" class="buy-button">Purchase .XYZ</button>
             </div>
-            <div class="sales-card bundle-card">
-                <h3 class="domain-name dynamic-text">Strategic Bundle</h3>
-                <p class="price bundle-price">$5,100 <small>USD</small></p>
-                <p class="installments">Secure the brand matrix. Dominate the dual future of AI & Web3.</p>
-                <button id="bundleBtn" class="bundle-button">Inquire for Bundle</button>
+            <!-- --- INLINE FORM CARD --- -->
+            <div class="sales-card form-card">
+                <h3 class="domain-name dynamic-text">Strategic Bundle Inquiry</h3>
+                <p class="installments">Submit your offer for the Shellbreaker.ai + .xyz bundle.</p>
+                <form id="offerForm" action="https://formspree.io/f/mkovvvpv" method="POST">
+                    <input type="text" name="name" placeholder="Your Name / Company" required>
+                    <input type="email" name="email" placeholder="Your Email Address" required>
+                    <input type="text" name="offer" placeholder="Your Offer (USD) (Optional)">
+                    <textarea name="message" placeholder="Your Message (Optional)" rows="4"></textarea>
+                    <button type="submit" id="submitBtn" class="bundle-button">Submit Offer</button>
+                    <div id="formStatus"></div>
+                </form>
             </div>
         </div>
 
@@ -217,23 +189,6 @@
         </footer>
     </div>
 
-    <!-- --- NEW: OFFER MODAL --- -->
-    <div id="offerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Strategic Bundle Inquiry</h2>
-            <p style="text-align: center; margin-top: -15px; font-size: 0.9rem; color: #95a5a6;">Submit your offer or inquiry for the Shellbreaker.ai + .xyz bundle.</p>
-            <form id="offerForm" action="https://formspree.io/f/mkovvvpv" method="POST">
-                <input type="text" name="name" placeholder="Your Name / Company" required>
-                <input type="email" name="email" placeholder="Your Email Address" required>
-                <input type="text" name="offer" placeholder="Your Offer (USD) (Optional)">
-                <textarea name="message" placeholder="Your Message (Optional)" rows="4"></textarea>
-                <button type="submit" id="submitBtn" class="bundle-button">Submit Offer</button>
-                <div id="formStatus"></div>
-            </form>
-        </div>
-    </div>
-
     <script>
         // --- p5.js SCRIPT FOR GENERATIVE LOBSTER ---
         // (Original p5.js script is unchanged and remains here)
@@ -244,7 +199,7 @@
         };
         new p5(sketch);
 
-        // --- NEW SCRIPT FOR MODAL & AJAX FORM SUBMISSION ---
+        // --- SCRIPT FOR FORM AND BUTTONS ---
 
         // --- Button Click Handlers (Preserving Original Functionality) ---
         document.getElementById('purchaseAiBtn').addEventListener('click', () => {
@@ -255,22 +210,6 @@
             window.open('https://www.spaceship.com/s/buy/shellbreaker.xyz/tP5afPEtCkSC9hy3', '_blank', 'noopener,noreferrer');
         });
         
-        // --- Modal Logic ---
-        const modal = document.getElementById('offerModal');
-        const bundleBtn = document.getElementById('bundleBtn');
-        const closeBtn = document.querySelector('.close-button');
-
-        const openOfferModal = () => modal.style.display = 'block';
-        const closeOfferModal = () => modal.style.display = 'none';
-
-        bundleBtn.addEventListener('click', openOfferModal);
-        closeBtn.addEventListener('click', closeOfferModal);
-        window.addEventListener('click', (event) => {
-            if (event.target == modal) {
-                closeOfferModal();
-            }
-        });
-
         // --- Formspree AJAX Submission Logic ---
         const form = document.getElementById('offerForm');
         const submitBtn = document.getElementById('submitBtn');
@@ -326,7 +265,6 @@
                     formStatus.textContent = '';
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Submit Offer';
-                    // If modal is still open, success message will disappear and button will be ready again
                 }, 5000);
             });
         });
